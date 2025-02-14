@@ -1,4 +1,4 @@
-name: Deploy FastAPI App
+name: Deploy FastAPI
 
 on:
   push:
@@ -7,26 +7,22 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up SSH and deploy to AWS
-        env:
-          AWS_HOST: ${{ secrets.AWS_HOST }}
-          AWS_USER: ${{ secrets.AWS_USER }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
+      - name: Install Dependencies
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $AWS_USER@$AWS_HOST << 'EOF'
-            cd /home/ubuntu/my-fastapi-app
-            git pull origin main
-            source venv/bin/activate
-            pip install -r requirements.txt
-            sudo systemctl restart my-fastapi-app
-            sudo systemctl restart nginx
-          EOF
+          cd /home/ubuntu/HNG/fastapi-book-project
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Restart FastAPI Service
+        run: |
+          sudo systemctl restart fastapi
